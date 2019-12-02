@@ -21,29 +21,42 @@ Block genesisBlock() {
     return genesisBlock;
 }
 
-void printCurrentChain(vector<Block> *chain) {
+string printCurrentChain(vector<Block> *chain) {
+    string httpResponse = "";
     for (vector<Block>::iterator i = (*chain).begin(); i != (*chain).end(); ++i) {
-        cout << "Block number " <<(*i).Index << "\n";
+        httpResponse.append("Block number " + to_string((*i).Index) + "\n");
         if ((*i).Data.empty())
-            cout << "\tThis is the Genesis block!\n";
-        else
-            cout << "\tTransaction data: " <<(*i).Data << "\n";
+            httpResponse.append("\tThis is the Genesis block!\n");
+        httpResponse.append(("\tTransaction data: " + (*i).Data) + "\n");
+        httpResponse.append(("\tTimestamp: " + to_string((*i).Timestamp)) + "\n");
+        httpResponse.append(("\tPrevious block: " + (*i).PreviousBlockHash) + "\n");
     }
-}
 
-bool isBlockValid(vector<Block> *chain, Block previousBlock, Block currentBlock) {
-    if (sha256(previousBlock) == currentBlock.PreviousBlockHash)
-        return true;
-    else if (previousBlock.Index + 1 == currentBlock.Index)
-        return true;
-    else if (not(currentBlock.Data).empty())
-        return true;
-
-    return false;
+    return httpResponse;
 }
 
 void addToChain(vector<Block> *chain, Block block) {
     (*chain).push_back(block);
+}
+
+bool isBlockValid(vector<Block> *chain, Block previousBlock, string userData) {
+    bool isValid = false;
+    const int MAX_DATA_LENGTH = 100;
+    struct Block currentBlock = generateNewBlock(sha256(previousBlock), userData, ((*chain).back()).Index);
+    if (sha256(previousBlock) == currentBlock.PreviousBlockHash)
+        isValid = true;
+    else if (previousBlock.Index + 1 == currentBlock.Index)
+        isValid = true;
+    else if (not(currentBlock.Data).empty())
+        isValid = true;
+
+    if (isValid) {
+        addToChain(chain, currentBlock);
+
+        return true;
+    }
+
+    return false;
 }
 
 int main() {
@@ -57,27 +70,7 @@ int main() {
     hashedPrevious = hashedGenesisBlock;
 
     // rest API used for user interaction with node
-    thread http_server (httpServer);
-
-    while (true) {
-        cout << "Ready to process next transaction\n";
-        cout << "Insert the data for the new transaction (insert LIST to show the current status of the chain): ";
-        string userData;
-        getline (cin, userData);
-        if (userData == "LIST") {
-            printCurrentChain(&chain);
-        } else {
-            struct Block newBlock = generateNewBlock(hashedPrevious, userData, previousIndex);
-            struct Block previousBlock = unhashedGenesisBlock;
-            if (isBlockValid(&chain, previousBlock, newBlock)) {
-                addToChain(&chain, newBlock);
-                previousIndex = newBlock.Index;
-                hashedPrevious = sha256(newBlock);
-            } else {
-                cout << "New block is invalid!\n";
-            }
-        }
-    }
+    httpServer(&chain);
 
     return 0;
 }

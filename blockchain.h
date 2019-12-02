@@ -14,5 +14,7 @@ struct Block {
 } ;
 
 string sha256(Block);
-void httpServer();
+string printCurrentChain(vector<Block> *);
+void httpServer(vector<Block> *);
+bool isBlockValid(vector<Block> *, Block, string);
 
