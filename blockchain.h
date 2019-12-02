@@ -1,19 +1,18 @@
-#ifndef BLOCKCHAIN_H
-#define BLOCKCHAIN_H
+#pragma once
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 using namespace std;
 
-string sha256(const string str);
-
 struct Block {
+    int Index;
     time_t Timestamp;
     string PreviousBlockHash;
-    string RootHash;
-    string Goal;
-    string Nonce;
+    string Data;
 } ;
 
-#endif
+string sha256(Block);
+void httpServer();
+
