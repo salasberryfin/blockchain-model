@@ -7,7 +7,7 @@ string sha256(Block block) {
     string unhashedBlock = to_string(block.Index) +
                            to_string(block.Timestamp) +
                            block.PreviousBlockHash +
-                           block.Data;
+                           block.TransData.Data;
     unsigned char hash[SHA256_DIGEST_LENGTH];
     SHA256_CTX sha256;
     SHA256_Init(&sha256);

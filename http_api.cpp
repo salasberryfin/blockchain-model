@@ -19,6 +19,33 @@ void httpServer(vector<Block> *chain) {
         if (!x)
             return crow::response(400);
         string hashedPreviousBlock = sha256((*chain).back());
+        try {
+            struct Transaction newTransaction;
+            newTransaction.Data = x["data"].s();
+            newTransaction.SourceId = x["source"].s();
+            newTransaction.TargetId = x["target"].s();
+            std::ostringstream os;
+            os << newTransaction.Data;
+            if (isBlockValid(chain, (*chain).back(), newTransaction)) {
+                return crow::response{os.str()};
+            } else {
+                cout << "New block is invalid!\n";
+                return crow::response(400);
+            }
+        } catch (const std::exception& e) {
+            return crow::response(400);
+        }
+    });
+
+    /**
+    // POST add node to network
+    CROW_ROUTE(app, "/add_node")
+        .methods("POST"_method)
+    ([chain](const crow::request& req){
+        auto x = crow::json::load(req.body);
+        if (!x)
+            return crow::response(400);
+        string hashedPreviousBlock = sha256((*chain).back());
         string userData = x["data"].s();
         std::ostringstream os;
         os << userData;
@@ -29,6 +56,7 @@ void httpServer(vector<Block> *chain) {
             return crow::response(400);
         }
     });
+    **/
 
     app.port(18080).multithreaded().run();
 }
