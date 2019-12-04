@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 
 using namespace std;
 
@@ -25,7 +26,19 @@ struct Block {
     Transaction TransData;
 } ;
 
-string sha256(Block);
+struct TcpConnections {
+    string Outbound[3];
+    string Inbound[3];
+} ;
+
+struct Node {
+    string HashedId;
+    TcpConnections Connections;     
+    int SelfPort;
+    //string SelfIp;
+} ;
+
+string sha256(string);
 string printCurrentChain(vector<Block> *);
 void httpServer(vector<Block> *);
 bool isBlockValid(vector<Block> *, Block, Transaction);
