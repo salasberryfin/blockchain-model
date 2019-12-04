@@ -7,12 +7,6 @@
 
 using namespace std;
 
-/** 
- * should be stored in a local DB
- * I use an extern to simplify the process
-**/
-extern vector<string> nodes;
-
 struct Transaction {
     int Index;
     string SourceId;
@@ -22,29 +16,20 @@ struct Transaction {
 
 struct Block {
     int Index;
-    time_t Timestamp;
+    string Timestamp;
     string PreviousBlockHash;
-    Transaction TransData;
+    int TransactionId;
 } ;
 
-//struct TcpConnections {
-//    string Outbound[3];
-//    string Inbound[3];
-//} ;
-
-//struct Node {
-//    string HashedId;
-//    TcpConnections Connections;     
-//    int SelfPort;
-//    //string SelfIp;
-//} ;
-
 string sha256(string);
-string printCurrentChain();
 void httpServer();
-bool isBlockValid(Block, Transaction);
 // mysql handler
 bool addNewTransaction(Transaction);
-bool addNewBlock(Block, int);
-
+bool addNewBlock(Block);
+Block getLastBlock();
+Transaction generateNewTransaction(int, string, string, string);
+Block generateNewBlock(int, string, string, int);
+bool addBlock(Block, Transaction);
+bool isValidBlock(Block, string);
+string printCurrentChain();
 

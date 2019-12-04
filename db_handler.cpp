@@ -22,6 +22,79 @@ sql::Connection* createConn(string sqlQuery) {
     return con;
 }
 
+string printCurrentChain() {
+    string httpResponse = "";
+    string sqlQuery = string("SELECT blockchain.id, ") +
+                      "blockchain.previous_block_hash, " +
+                      "transactions.data FROM blockchain " +
+                      "INNER JOIN transactions on " +
+                      "(blockchain.transaction_id=transactions.id) " + 
+                      "ORDER BY id DESC LIMIT 10;";
+    sql::Connection* con = createConn(sqlQuery);
+    sql::Statement *stmt;
+    sql::ResultSet *res;
+    try {
+        stmt = con->createStatement();
+        res = stmt->executeQuery(sqlQuery);
+        while (res->next()) {
+            httpResponse.append("Block Number: ");
+            httpResponse.append(to_string(res->getInt("id")));
+            httpResponse.append("\n");
+            httpResponse.append("\tTransaction Data: ");
+            httpResponse.append(res->getString("data"));
+            httpResponse.append("\n");
+            httpResponse.append("\tPrevious Block Hash: ");
+            httpResponse.append(res->getString("previous_block_hash"));
+            httpResponse.append("\n");
+        }
+	} catch (sql::SQLException &e) {
+        cout << "# ERR: SQLException in " << __FILE__;
+        cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
+        cout << "# ERR: " << e.what();
+        cout << " (MySQL error code: " << e.getErrorCode();
+        cout << ", SQLState: " << e.getSQLState() << " )" << endl;
+
+        return "";
+    }
+    delete stmt;
+    delete con;
+
+    return httpResponse;
+}
+
+Block getLastBlock() {
+    Block block;
+    const string tableName = "blockchain";
+    string sqlQuery = "SELECT * FROM " + tableName +
+                      " ORDER BY id DESC LIMIT 1;";
+    sql::Connection* con = createConn(sqlQuery);
+    sql::Statement *stmt;
+    sql::ResultSet *res;
+    try {
+        stmt = con->createStatement();
+        res = stmt->executeQuery(sqlQuery);
+        while (res->next()) {
+            block.Index = res->getInt("id");
+            block.Timestamp = res->getString("timestamp");
+            block.PreviousBlockHash = res->getString("previous_block_hash");
+            block.TransactionId = res->getInt("transaction_id");
+        }
+	} catch (sql::SQLException &e) {
+        cout << "# ERR: SQLException in " << __FILE__;
+        cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
+        cout << "# ERR: " << e.what();
+        cout << " (MySQL error code: " << e.getErrorCode();
+        cout << ", SQLState: " << e.getSQLState() << " )" << endl;
+
+        return Block{};
+    }
+    delete stmt;
+    delete con;
+
+
+    return block;
+}
+
 bool addNewTransaction(Transaction trans) {
     const string tableName = "transactions";
     string transValues = "( '" + to_string(trans.Index) +
@@ -31,7 +104,6 @@ bool addNewTransaction(Transaction trans) {
     string sqlQuery = "INSERT INTO " + tableName + 
                       " (id, source_id, target_id, data) " +
                       "VALUES " + transValues + ";";
-    cout << sqlQuery;
     sql::Connection* con = createConn(sqlQuery);
     sql::Statement *stmt;
     bool sqlResult;
@@ -53,15 +125,14 @@ bool addNewTransaction(Transaction trans) {
     return true;
 }
 
-bool addNewBlock(Block block, int transId) {
+bool addNewBlock(Block block) {
     const string tableName = "blockchain";
-    string blockValues = "( '" + to_string(block.Timestamp) +
+    string blockValues = "( '" + block.Timestamp +
                          "', '" + block.PreviousBlockHash +
-                         "', '" + to_string(transId) + "' )";
+                         "', '" + to_string(block.TransactionId) + "' )";
     string sqlQuery = "INSERT INTO " + tableName + 
                       " (timestamp, previous_block_hash, transaction_id) " +
                       "VALUES " + blockValues + ";";
-    cout << "Add new block query\n " << sqlQuery << "\n";
     sql::Connection* con = createConn(sqlQuery);
     sql::Statement *stmt;
     bool sqlResult;
