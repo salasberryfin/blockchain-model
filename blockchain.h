@@ -14,6 +14,7 @@ using namespace std;
 extern vector<string> nodes;
 
 struct Transaction {
+    int Index;
     string SourceId;
     string TargetId;
     string Data;
@@ -26,20 +27,24 @@ struct Block {
     Transaction TransData;
 } ;
 
-struct TcpConnections {
-    string Outbound[3];
-    string Inbound[3];
-} ;
+//struct TcpConnections {
+//    string Outbound[3];
+//    string Inbound[3];
+//} ;
 
-struct Node {
-    string HashedId;
-    TcpConnections Connections;     
-    int SelfPort;
-    //string SelfIp;
-} ;
+//struct Node {
+//    string HashedId;
+//    TcpConnections Connections;     
+//    int SelfPort;
+//    //string SelfIp;
+//} ;
 
 string sha256(string);
-string printCurrentChain(vector<Block> *);
-void httpServer(vector<Block> *);
-bool isBlockValid(vector<Block> *, Block, Transaction);
+string printCurrentChain();
+void httpServer();
+bool isBlockValid(Block, Transaction);
+// mysql handler
+bool addNewTransaction(Transaction);
+bool addNewBlock(Block, int);
+
 
